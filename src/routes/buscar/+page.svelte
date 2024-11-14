@@ -1,0 +1,130 @@
+<!-- src/routes/buscar/+page.svelte -->
+<script lang="ts">
+  import { productos } from '$lib/data';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+
+  let busqueda = $page.url.searchParams.get('q') || '';
+  let categoriaSeleccionada = $page.url.searchParams.get('categoria') || '';
+  let regionSeleccionada = $page.url.searchParams.get('region') || '';
+  let timeoutId: NodeJS.Timeout;
+
+  const categorias = ['Tejidos', 'Cerámica'];
+  const regiones = ['Boyacá', 'Cundinamarca'];
+
+  $: productosFiltrados = productos.filter(producto => {
+    const coincideBusqueda = !busqueda || 
+      producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      producto.descripcion.toLowerCase().includes(busqueda.toLowerCase());
+    
+    const coincideCategoria = !categoriaSeleccionada || 
+      producto.categoria === categoriaSeleccionada;
+    
+    const coincideRegion = !regionSeleccionada || 
+      producto.region === regionSeleccionada;
+
+    return coincideBusqueda && coincideCategoria && coincideRegion;
+  });
+
+  function actualizarFiltros() {
+    const params = new URLSearchParams();
+    if (busqueda) params.set('q', busqueda);
+    if (categoriaSeleccionada) params.set('categoria', categoriaSeleccionada);
+    if (regionSeleccionada) params.set('region', regionSeleccionada);
+    goto(`/buscar?${params.toString()}`);
+  }
+
+  function handleSearch(event: Event) {
+    // Limpiar el timeout anterior si existe
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    
+    // Crear un nuevo timeout
+    timeoutId = setTimeout(() => {
+      actualizarFiltros();
+    }, 1000); // Espera 1 segundo antes de ejecutar la búsqueda
+  }
+
+  onMount(() => {
+    // Limpiar el timeout cuando el componente se desmonta
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  });
+</script>
+
+<svelte:head>
+  <title>Buscar Productos - Artesanías Tradicionales</title>
+</svelte:head>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-8">
+    <input
+      type="text"
+      placeholder="Buscar productos..."
+      class="w-full p-2 border rounded"
+      bind:value={busqueda}
+      on:input={handleSearch}
+    />
+    
+    <div class="flex gap-4 mt-4">
+      <select
+        class="p-2 border rounded"
+        bind:value={categoriaSeleccionada}
+        on:change={actualizarFiltros}
+      >
+        <option value="">Todas las categorías</option>
+        {#each categorias as categoria}
+          <option value={categoria}>{categoria}</option>
+        {/each}
+      </select>
+      
+      <select
+        class="p-2 border rounded"
+        bind:value={regionSeleccionada}
+        on:change={actualizarFiltros}
+      >
+        <option value="">Todas las regiones</option>
+        {#each regiones as region}
+          <option value={region}>{region}</option>
+        {/each}
+      </select>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {#each productosFiltrados as producto}
+      <a 
+        href={`/productos/${producto.id}`}
+        class="bg-white rounded-lg overflow-hidden shadow-lg group"
+      >
+        <img 
+          src={producto.imagenUrl} 
+          alt={producto.nombre}
+          class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">{producto.nombre}</h2>
+          <p class="text-gray-600">{producto.descripcion}</p>
+          <div class="mt-2">
+            <span class="text-lg font-bold">
+              ${producto.precio.toLocaleString()}
+            </span>
+          </div>
+          <div class="mt-2 flex gap-2">
+            <span class="inline-block bg-blue-100 text-blue-800 rounded px-2 py-1 text-sm">
+              {producto.region}
+            </span>
+            <span class="inline-block bg-green-100 text-green-800 rounded px-2 py-1 text-sm">
+              {producto.categoria}
+            </span>
+          </div>
+        </div>
+      </a>
+    {/each}
+  </div>
+</div>
