@@ -1,6 +1,15 @@
 <script lang="ts">
-  import { productos } from '$lib/data';
   import { colors } from '$lib/colors';
+
+  import { onMount } from 'svelte';
+
+  let productos: any[] = [];
+
+  onMount(async () => {
+    const response = await fetch('http://107.20.173.246/api/productos');
+    const data = await response.json();
+    productos = data; // Asignamos los productos obtenidos a la variable reactiva
+  });
 </script>
 
 <svelte:head>
@@ -26,16 +35,16 @@
         class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden group"
       >
         <img 
-          src={producto.imagenUrl} 
-          alt={producto.nombre}
+          src={producto.image_url} 
+          alt={producto.name}
           class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div class="p-6">
-          <h2 class="text-xl font-semibold mb-2">{producto.nombre}</h2>
-          <p class="text-gray-600 mb-4">{producto.descripcion}</p>
+          <h2 class="text-xl font-semibold mb-2">{producto.name}</h2>
+          <p class="text-gray-600 mb-4">{producto.description}</p>
           <div class="flex justify-between items-center">
             <span class="text-xl font-bold" style="color: {producto.region === 'Boyacá' ? colors.boyaca.primary : colors.cundinamarca.primary}">
-              ${producto.precio.toLocaleString()}
+              ${producto.price.toLocaleString()}
             </span>
             <span class={producto.region === 'Boyacá' ? colors.boyaca.tag : colors.cundinamarca.tag}>
               {producto.region}

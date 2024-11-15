@@ -1,6 +1,4 @@
-<!-- src/routes/buscar/+page.svelte -->
 <script lang="ts">
-  import { productos } from '$lib/data';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -8,33 +6,53 @@
   let busqueda = $page.url.searchParams.get('q') || '';
   let categoriaSeleccionada = $page.url.searchParams.get('categoria') || '';
   let regionSeleccionada = $page.url.searchParams.get('region') || '';
+  let productos = [];  // Aquí guardaremos los productos
+  let productosFiltrados = [];  // Aquí se almacenarán los productos después de aplicar filtros
   let timeoutId: NodeJS.Timeout;
 
   const categorias = ['Tejidos', 'Cerámica'];
   const regiones = ['Boyacá', 'Cundinamarca'];
 
-  $: productosFiltrados = productos.filter(producto => {
-    const coincideBusqueda = !busqueda || 
-      producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      producto.descripcion.toLowerCase().includes(busqueda.toLowerCase());
-    
-    const coincideCategoria = !categoriaSeleccionada || 
-      producto.categoria === categoriaSeleccionada;
-    
-    const coincideRegion = !regionSeleccionada || 
-      producto.region === regionSeleccionada;
+  // Función para cargar los productos desde la API
+  const cargarProductos = async () => {
+    try {
+      const response = await fetch('http://107.20.173.246/api/productos');
+      if (!response.ok) throw new Error('No se pudieron cargar los productos');
+      productos = await response.json();
+      filtrarProductos();  // Filtrar los productos después de cargarlos
+    } catch (error) {
+      console.error('Error al cargar los productos:', error);
+    }
+  };
 
-    return coincideBusqueda && coincideCategoria && coincideRegion;
-  });
+  // Función para aplicar los filtros
+  const filtrarProductos = () => {
+    productosFiltrados = productos.filter(producto => {
+      const coincideBusqueda = !busqueda || 
+        producto.name.toLowerCase().includes(busqueda.toLowerCase()) ||
+        producto.description.toLowerCase().includes(busqueda.toLowerCase());
+      
+      const coincideCategoria = !categoriaSeleccionada || 
+        producto.categoria === categoriaSeleccionada;
+      
+      const coincideRegion = !regionSeleccionada || 
+        producto.region === regionSeleccionada;
 
+      return coincideBusqueda && coincideCategoria && coincideRegion;
+    });
+  };
+
+  // Actualizar los filtros en la URL
   function actualizarFiltros() {
     const params = new URLSearchParams();
     if (busqueda) params.set('q', busqueda);
     if (categoriaSeleccionada) params.set('categoria', categoriaSeleccionada);
     if (regionSeleccionada) params.set('region', regionSeleccionada);
     goto(`/buscar?${params.toString()}`);
+    filtrarProductos();  // Aplicar los filtros después de actualizar la URL
   }
 
+  // Manejar la búsqueda con un retraso (debounce)
   function handleSearch(event: Event) {
     // Limpiar el timeout anterior si existe
     if (timeoutId) {
@@ -47,7 +65,10 @@
     }, 1000); // Espera 1 segundo antes de ejecutar la búsqueda
   }
 
+  // Cargar productos cuando el componente se monta
   onMount(() => {
+    cargarProductos();
+    
     // Limpiar el timeout cuando el componente se desmonta
     return () => {
       if (timeoutId) {
@@ -103,16 +124,16 @@
         class="bg-white rounded-lg overflow-hidden shadow-lg group"
       >
         <img 
-          src={producto.imagenUrl} 
-          alt={producto.nombre}
+          src={producto.image_url} 
+          alt={producto.name}
           class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div class="p-4">
-          <h2 class="text-xl font-semibold">{producto.nombre}</h2>
-          <p class="text-gray-600">{producto.descripcion}</p>
+          <h2 class="text-xl font-semibold">{producto.name}</h2>
+          <p class="text-gray-600">{producto.description}</p>
           <div class="mt-2">
             <span class="text-lg font-bold">
-              ${producto.precio.toLocaleString()}
+              ${producto.price.toLocaleString()}
             </span>
           </div>
           <div class="mt-2 flex gap-2">
