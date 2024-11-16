@@ -11,7 +11,7 @@
   const loadProduct = async () => {
     try {
       // Asegúrate de que la URL sea correcta
-      const productResponse = await fetch('http://107.20.173.246/api/productos');
+      const productResponse = await fetch('https://0d25f9c0yb.execute-api.us-east-1.amazonaws.com/api/productos');
       if (!productResponse.ok) throw new Error('No se pudieron cargar los productos');
       
       const productos = await productResponse.json();
@@ -21,7 +21,7 @@
 
       // Si el producto es encontrado, buscar el artesano
       if (producto?.artesan_id) {
-        const artesanoResponse = await fetch(`http://107.20.173.246/api/artesanos/${producto.artesan_id}`);
+        const artesanoResponse = await fetch(`https://0d25f9c0yb.execute-api.us-east-1.amazonaws.com/api/artesanos/${producto.artesan_id}`);
         if (!artesanoResponse.ok) throw new Error('Artesano no encontrado');
         artesano = await artesanoResponse.json();
       }

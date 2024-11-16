@@ -6,7 +6,7 @@
   let productos: any[] = [];
 
   onMount(async () => {
-    const response = await fetch('http://107.20.173.246/api/productos');
+    const response = await fetch('https://0d25f9c0yb.execute-api.us-east-1.amazonaws.com//api/productos');
     const data = await response.json();
     productos = data; // Asignamos los productos obtenidos a la variable reactiva
   });

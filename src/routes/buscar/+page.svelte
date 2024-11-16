@@ -16,7 +16,7 @@
   // Función para cargar los productos desde la API
   const cargarProductos = async () => {
     try {
-      const response = await fetch('http://107.20.173.246/api/productos');
+      const response = await fetch('https://0d25f9c0yb.execute-api.us-east-1.amazonaws.com/api/productos');
       if (!response.ok) throw new Error('No se pudieron cargar los productos');
       productos = await response.json();
       filtrarProductos();  // Filtrar los productos después de cargarlos
